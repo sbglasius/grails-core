@@ -21,9 +21,7 @@ import grails.databinding.SimpleMapDataBindingSource
 import grails.databinding.errors.BindingError
 import grails.databinding.events.DataBindingListenerAdapter
 import grails.persistence.Entity
-import grails.test.mixin.Mock
-import grails.test.mixin.TestMixin
-import grails.test.mixin.domain.DomainClassUnitTestMixin
+import grails.testing.gorm.DataTest
 import grails.validation.DeferredBindingActions
 import grails.validation.Validateable
 import org.apache.commons.lang.builder.CompareToBuilder
@@ -32,12 +30,15 @@ import spock.lang.Issue
 import spock.lang.Specification
 import spock.lang.Unroll
 
-@TestMixin(DomainClassUnitTestMixin)
-@Mock([Foo, AssociationBindingAuthor, AssociationBindingPage, AssociationBindingBook, Author, Child, CollectionContainer, DataBindingBook, Fidget, Parent, Publication, Publisher, Team, Widget])
-class GrailsWebDataBinderSpec extends Specification {
+class GrailsWebDataBinderSpec extends Specification implements DataTest {
+
     private static Locale defaultLocale = Locale.getDefault()
 
     GrailsWebDataBinder binder
+
+    void setupSpec() {
+        mockDomains Foo, AssociationBindingAuthor, AssociationBindingPage, AssociationBindingBook, Author, Child, CollectionContainer, DataBindingBook, Fidget, Parent, Publication, Publisher, Team, Widget
+    }
 
     void setup() {
         binder = grailsApplication.mainContext.getBean(DataBindingUtils.DATA_BINDER_BEAN_NAME)

@@ -19,6 +19,7 @@ import grails.web.UrlConverter
 import grails.web.api.WebAttributes
 import grails.web.mapping.LinkGenerator
 import groovy.transform.CompileStatic
+import org.grails.web.mapping.UrlMappingUtils
 import org.grails.web.mapping.mvc.UrlMappingsHandlerMapping
 import org.grails.web.servlet.mvc.GrailsWebRequest
 import org.grails.web.util.GrailsApplicationAttributes
@@ -89,6 +90,13 @@ trait RequestForwarder implements WebAttributes {
             if(params.plugin) {
                 params.plugin = params.plugin
             }
+
+            if ( !params.params ) {
+                params.params =  UrlMappingUtils.findAllParamsNotInKeys(
+                        UrlMappingUtils.findAllParamsNotInUrlMappingKeywords(webRequest.params),
+                        webRequest.originalParams.keySet()
+                )
+            }
         }
 
         Map model = params.model instanceof Map ? (Map)params.model : Collections.EMPTY_MAP
@@ -96,7 +104,9 @@ trait RequestForwarder implements WebAttributes {
         HttpServletRequest request = webRequest.currentRequest
         HttpServletResponse response = webRequest.currentResponse
 
-        WebUtils.exposeRequestAttributes(request, (Map)model);
+        for (Map.Entry<String, Object> entry : model.entrySet()) {
+            request.setAttribute(entry.getKey(), entry.getValue())
+        }
 
         request.setAttribute(GrailsApplicationAttributes.FORWARD_IN_PROGRESS, true)
         params.includeContext = false

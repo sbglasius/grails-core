@@ -99,6 +99,11 @@ interface Settings {
     String MIME_DISABLE_ACCEPT_HEADER_FOR_USER_AGENTS = 'grails.mime.disable.accept.header.userAgents'
 
     /**
+     * XHR requests will ignore MIME_DISABLE_ACCEPT_HEADER_FOR_USER_AGENTS by default, enable to override default
+     */
+    String MIME_DISABLE_ACCEPT_HEADER_FOR_USER_AGENTS_XHR = 'grails.mime.disable.accept.header.userAgentsXhr'
+
+    /**
      * The default scope for controllers
      */
     String CONTROLLERS_DEFAULT_SCOPE = "grails.controllers.defaultScope"
@@ -223,4 +228,17 @@ interface Settings {
      */
     String SETTING_CORS_FILTER = "grails.cors.filter"
 
+    String TRIM_STRINGS = 'grails.databinding.trimStrings'
+
+    String CONVERT_EMPTY_STRINGS_TO_NULL = 'grails.databinding.convertEmptyStringsToNull'
+
+    String AUTO_GROW_COLLECTION_LIMIT = 'grails.databinding.autoGrowCollectionLimit'
+
+    String DATE_FORMATS = 'grails.databinding.dateFormats'
+
+    String DATE_LENIENT_PARSING = 'grails.databinding.dateParsingLenient'
+
+    String I18N_CACHE_SECONDS = 'grails.i18n.cache.seconds'
+
+    String I18N_FILE_CACHE_SECONDS = 'grails.i18n.filecache.seconds'
 }

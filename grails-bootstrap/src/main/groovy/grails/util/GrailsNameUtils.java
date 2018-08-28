@@ -247,6 +247,10 @@ public class GrailsNameUtils {
             name = name.substring(pos + 1);
         }
 
+        if (name.isEmpty()) {
+            return name;
+        }
+
         // Check whether the name begins with two upper case letters.
         if (name.length() > 1 && Character.isUpperCase(name.charAt(0)) &&
                 Character.isUpperCase(name.charAt(1))) {
@@ -558,13 +562,25 @@ public class GrailsNameUtils {
      * @return The property name equivalent
      */
     public static String getPropertyForGetter(String getterName, Class returnType) {
+        return getPropertyForGetter(getterName, returnType.getName());
+    }
+
+    /**
+     * Returns a property name equivalent for the given getter name and return type or null if it is not a valid getter. If not null
+     * or empty the getter name is assumed to be a valid identifier.
+     *
+     * @param getterName The getter name
+     * @param returnType The type the method returns
+     * @return The property name equivalent
+     */
+    public static String getPropertyForGetter(String getterName, String returnType) {
         if (getterName == null || getterName.length() == 0) return null;
 
         if (getterName.startsWith("get")) {
             String prop = getterName.substring(3);
             return convertValidPropertyMethodSuffix(prop);
         }
-        if (getterName.startsWith("is") && returnType == boolean.class) {
+        if (getterName.startsWith("is") && returnType.equals("boolean")) {
             String prop = getterName.substring(2);
             return convertValidPropertyMethodSuffix(prop);
         }
@@ -594,6 +610,9 @@ public class GrailsNameUtils {
         }
         if (Character.isUpperCase(suffix.charAt(0))) {
             return Character.toLowerCase(suffix.charAt(0)) + suffix.substring(1);
+        }
+        if('_' == suffix.charAt(0)) {
+            return suffix;
         }
         return null;
     }

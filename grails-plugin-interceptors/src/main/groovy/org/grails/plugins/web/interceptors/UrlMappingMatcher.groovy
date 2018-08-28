@@ -17,16 +17,12 @@ package org.grails.plugins.web.interceptors
 
 import grails.artefact.Interceptor
 import grails.interceptors.Matcher
-import grails.util.Environment
 import grails.web.mapping.UrlMappingInfo
 import groovy.transform.CompileStatic
-import org.apache.commons.lang.builder.HashCodeBuilder
+import org.codehaus.groovy.util.HashCodeHelper
 import org.springframework.util.AntPathMatcher
 
-import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Pattern
-
-
 
 /**
  * Used to match {@link UrlMappingInfo} instance by {@link grails.artefact.Interceptor} instances
@@ -153,6 +149,11 @@ class UrlMappingMatcher implements Matcher {
         return this
     }
 
+    @Override
+    boolean isExclude() {
+        return excludes || uriExcludePatterns
+    }
+
     private Pattern regexMatch(Map arguments, String type, Pattern defaultPattern = WILD_CARD_PATTERN) {
         def value = arguments.get(type)
         if(!value) return defaultPattern
@@ -211,9 +212,9 @@ class UrlMappingMatcher implements Matcher {
     }
 
     protected int hashCode(UrlMappingInfo info) {
-        new HashCodeBuilder()
-            .append(interceptor)
-            .append(info)
-            .toHashCode()
+        int hash = HashCodeHelper.initHash()
+        hash = HashCodeHelper.updateHash(hash, interceptor)
+        hash = HashCodeHelper.updateHash(hash, info)
+        return hash
     }
 }

@@ -43,6 +43,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 class GrailsApp extends SpringApplication {
 
     private static final String GRAILS_BANNER = 'grails-banner.txt'
+    private static final String SPRING_PROFILES = 'spring.profiles.active'
 
     private static boolean developmentModeActive = false
     private static DirectoryWatcher directoryWatcher
@@ -56,9 +57,9 @@ class GrailsApp extends SpringApplication {
      * {@link #run(String...)}.
      * @param sources the bean sources
      * @see #run(Object, String[])
-     * @see #GrailsApp(org.springframework.core.io.ResourceLoader, Object...)
+     * @see #GrailsApp(org.springframework.core.io.ResourceLoader, Class<?>...)
      */
-    GrailsApp(Object... sources) {
+    GrailsApp(Class<?>... sources) {
         super(sources)
         bannerMode = Banner.Mode.OFF
     }
@@ -71,9 +72,9 @@ class GrailsApp extends SpringApplication {
      * @param resourceLoader the resource loader to use
      * @param sources the bean sources
      * @see #run(Object, String[])
-     * @see #GrailsApp(org.springframework.core.io.ResourceLoader, Object...)
+     * @see #GrailsApp(org.springframework.core.io.ResourceLoader, Class<?>...)
      */
-    GrailsApp(ResourceLoader resourceLoader, Object... sources) {
+    GrailsApp(ResourceLoader resourceLoader, Class<?>... sources) {
         super(resourceLoader, sources)
         bannerMode = Banner.Mode.OFF
     }
@@ -112,6 +113,11 @@ class GrailsApp extends SpringApplication {
     @Override
     protected void configureEnvironment(ConfigurableEnvironment environment, String[] args) {
         configurePropertySources(environment, args)
+
+        String[] springProfile = environment.getProperty(SPRING_PROFILES, String[])
+        if (springProfile) {
+            environment.setActiveProfiles(springProfile)
+        }
 
         def env = Environment.current
         environment.addActiveProfile(env.name)
@@ -166,8 +172,6 @@ class GrailsApp extends SpringApplication {
                 configureDirectoryWatcher(directoryWatcher, dir.absolutePath)
             }
 
-            def locationLength = baseDirPath.length() + 1
-
             for(GrailsPlugin plugin in pluginManager.allPlugins) {
                 def watchedResourcePatterns = plugin.getWatchedResourcePatterns()
                 if(watchedResourcePatterns != null) {
@@ -191,12 +195,13 @@ class GrailsApp extends SpringApplication {
                             }
                             first = false
                             if(wp.file) {
-                                def resolvedPath = new File(watchBase, wp.file.canonicalPath.substring(locationLength))
+                                String relativePath = wp.file.canonicalPath - baseDirPath
+                                def resolvedPath = new File(watchBase, relativePath)
                                 directoryWatcher.addWatchFile(resolvedPath)
                             }
                             else if(wp.directory && wp.extension) {
-
-                                def resolvedPath = new File(watchBase, wp.directory.canonicalPath.substring(locationLength))
+                                String relativePath = wp.directory.canonicalPath - baseDirPath
+                                def resolvedPath = new File(watchBase, relativePath)
                                 directoryWatcher.addWatchDirectory(resolvedPath, wp.extension)
                             }
                         }
@@ -223,8 +228,8 @@ class GrailsApp extends SpringApplication {
                                 recompile(f, compilerConfig, location)
                                 if(newFiles.contains(f)) {
                                     newFiles.remove(f)
-                                    pluginManager.informOfFileChange(f)
                                 }
+                                pluginManager.informOfFileChange(f)
                                 sleep 1000
                             }
                         }
@@ -241,8 +246,8 @@ class GrailsApp extends SpringApplication {
                                 recompile(changedFile, compilerConfig, location)
                                 if(newFiles.contains(changedFile)) {
                                     newFiles.remove(changedFile)
-                                    pluginManager.informOfFileChange(changedFile)
                                 }
+                                pluginManager.informOfFileChange(changedFile)
                             }
                         }
 
@@ -371,8 +376,8 @@ class GrailsApp extends SpringApplication {
      * @param args the application arguments (usually passed from a Java main method)
      * @return the running {@link org.springframework.context.ApplicationContext}
      */
-    static ConfigurableApplicationContext run(Object source, String... args) {
-        return run([ source ] as Object[], args)
+    static ConfigurableApplicationContext run(Class<?> source, String... args) {
+        return run([ source ] as Class[], args)
     }
 
     /**
@@ -382,7 +387,7 @@ class GrailsApp extends SpringApplication {
      * @param args the application arguments (usually passed from a Java main method)
      * @return the running {@link org.springframework.context.ApplicationContext}
      */
-    static ConfigurableApplicationContext run(Object[] sources, String[] args) {
+    static ConfigurableApplicationContext run(Class<?>[] sources, String[] args) {
         GrailsApp grailsApp = new GrailsApp(sources)
         grailsApp.banner = new ResourceBanner(new ClassPathResource(GRAILS_BANNER))
         return grailsApp.run(args)

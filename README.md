@@ -1,7 +1,3 @@
-#### Waffle.IO Board
-- [![Stories in Acknowledged](https://badge.waffle.io/grails/grails-core.png?label=Acknowledged&title=Acknowledged)](https://waffle.io/grails/grails-core)
-- [![Stories in Progress](https://badge.waffle.io/grails/grails-core.png?label=in%20progress&title=In%20Progress)](http://waffle.io/grails/grails-core)
-
 #### Build Status
 - [![Build Status](https://travis-ci.org/grails/grails-core.svg?branch=master)](https://travis-ci.org/grails/grails-core)
 
@@ -61,8 +57,7 @@ The [Travis CI](https://travis-ci.org/grails/grails-core) build will automatical
 License
 ---
 
-Grails and Groovy are licensed under the terms of the [Apache License, Version 2.0][Apache License, Version 2.0].
-[Apache License, Version 2.0]: http://www.apache.org/licenses/LICENSE-2.0.html
+Grails and Groovy are licensed under the terms of the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).
 
 
 ***

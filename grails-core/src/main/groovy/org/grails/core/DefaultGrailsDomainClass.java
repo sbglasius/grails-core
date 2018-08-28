@@ -16,6 +16,7 @@
 package org.grails.core;
 
 import grails.core.ComponentCapableDomainClass;
+import grails.core.DefaultGrailsApplication;
 import grails.core.GrailsDomainClass;
 import grails.core.GrailsDomainClassProperty;
 import grails.util.GrailsNameUtils;
@@ -26,10 +27,14 @@ import org.grails.core.exceptions.GrailsConfigurationException;
 import org.grails.core.exceptions.GrailsDomainException;
 import org.grails.core.exceptions.InvalidPropertyException;
 import org.grails.core.io.support.GrailsFactoriesLoader;
+import org.grails.datastore.mapping.keyvalue.mapping.config.KeyValueMappingContext;
 import org.grails.datastore.mapping.model.MappingContext;
 import org.grails.datastore.mapping.model.PersistentEntity;
 import org.grails.datastore.mapping.model.PersistentProperty;
+import org.grails.datastore.mapping.model.PropertyMapping;
 import org.grails.datastore.mapping.model.types.Association;
+import org.grails.datastore.mapping.model.types.Basic;
+import org.grails.datastore.mapping.model.types.Simple;
 import org.grails.datastore.mapping.reflect.NameUtils;
 import org.grails.validation.discovery.ConstrainedDiscovery;
 import org.slf4j.Logger;
@@ -47,6 +52,7 @@ import java.util.*;
  * @since 0.1
  */
 @SuppressWarnings("rawtypes")
+@Deprecated
 public class DefaultGrailsDomainClass extends AbstractGrailsClass implements GrailsDomainClass, ComponentCapableDomainClass {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultGrailsDomainClass.class);
@@ -99,6 +105,22 @@ public class DefaultGrailsDomainClass extends AbstractGrailsClass implements Gra
             if (identity != null) {
                 identifier = new DefaultGrailsDomainClassProperty(this, persistentEntity, identity);
             }
+            else {
+                PersistentProperty[] compositeIdentity = persistentEntity.getCompositeIdentity();
+                if(compositeIdentity != null) {
+                    // use dummy. This is a horrible hack, but no current composite id support in this API
+                    identity = new Simple(persistentEntity, persistentEntity.getMappingContext(), "id", Long.class) {
+                        @Override
+                        public PropertyMapping getMapping() {
+                            return null;
+                        }
+                    };
+                    identifier = new DefaultGrailsDomainClassProperty(this, persistentEntity, identity);
+                    for (PersistentProperty property : compositeIdentity) {
+                        propertyMap.put(property.getName(), new DefaultGrailsDomainClassProperty(this, persistentEntity, property));
+                    }
+                }
+            }
 
             // First go through the properties of the class and create domain properties
             // populating into a map
@@ -107,9 +129,9 @@ public class DefaultGrailsDomainClass extends AbstractGrailsClass implements Gra
             persistentProperties = propertyMap.values().toArray(new GrailsDomainClassProperty[propertyMap.size()]);
 
             // if no identifier property throw exception
-            if (identifier == null) {
+            if (identifier == null ) {
                 throw new GrailsDomainException("Identity property not found, but required in domain class [" + getFullName() + "]");
-            } else {
+            } else if(identifier != null){
                 propertyMap.put(identifier.getName(), identifier);
             }
             // if no version property throw exception
@@ -140,7 +162,14 @@ public class DefaultGrailsDomainClass extends AbstractGrailsClass implements Gra
             if (persistentEntity == null) {
                 persistentEntity = mappingContext.getPersistentEntity(this.getFullName());
                 if (persistentEntity == null) {
-                    throw new GrailsConfigurationException("Could not retrieve the respective entity for domain " + this.getName() + " in the mapping context API");
+                    MappingContext concreteMappingContext = getApplication().getMappingContext();
+                    if(concreteMappingContext.getClass() == KeyValueMappingContext.class) {
+                        // In a unit testing context, allow
+                        persistentEntity = concreteMappingContext.addPersistentEntity(getClazz());
+                    }
+                    else {
+                        throw new GrailsConfigurationException("Could not retrieve the respective entity for domain " + this.getName() + " in the mapping context API");
+                    }
                 }
             }
         }
@@ -195,6 +224,8 @@ public class DefaultGrailsDomainClass extends AbstractGrailsClass implements Gra
                 PersistentEntity associatedEntity = association.getAssociatedEntity();
                 if (associatedEntity != null) {
                     configurationMap.put(association.getName(), associatedEntity.getJavaClass());
+                } else if (association instanceof Basic) {
+                    configurationMap.put(association.getName(), ((Basic) association).getComponentType());
                 }
             }
             currentEntity = currentEntity.getParentEntity();
@@ -321,7 +352,14 @@ public class DefaultGrailsDomainClass extends AbstractGrailsClass implements Gra
      */
     public Class<?> getRelatedClassType(String propertyName) {
         verifyContextIsInitialized();
-        return persistentEntity.getPropertyByName(propertyName).getOwner().getJavaClass();
+        PersistentProperty prop = persistentEntity.getPropertyByName(propertyName);
+        if (prop instanceof Association) {
+            PersistentEntity associatedEntity = ((Association) prop).getAssociatedEntity();
+            if (associatedEntity != null) {
+                return associatedEntity.getJavaClass();
+            }
+        }
+        return null;
     }
 
     /* (non-Javadoc)
