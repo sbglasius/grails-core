@@ -17,12 +17,12 @@ jobs:
       GIT_USER_EMAIL: behlp@unityfoundation.io
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
         with:
           token: ${{ secrets.GH_TOKEN }}
-      - uses: gradle/wrapper-validation-action@v2
+      - uses: gradle/wrapper-validation-action@b5418f5a58f5fd2eb486dd7efb368fe7be7eae45 # v2
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4
         with:
           distribution: 'adopt'
           java-version: '11'
@@ -43,7 +43,7 @@ jobs:
       - name: Run Assemble
         if: success()
         id: assemble
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3
         with:
           arguments: assemble
         env:
@@ -52,7 +52,7 @@ jobs:
           GRADLE_ENTERPRISE_BUILD_CACHE_NODE_KEY: ${{ secrets.GRADLE_ENTERPRISE_BUILD_CACHE_NODE_KEY }}
       - name: Upload Distribution
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4
         with:
           name: grails-${{ steps.release_version.outputs.value }}.zip
           path: build/distributions/grails-${{ steps.release_version.outputs.value }}.zip
@@ -72,7 +72,7 @@ jobs:
       - name: Publish to Sonatype OSSRH
         id: publish
         if: success()
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
           GRADLE_ENTERPRISE_BUILD_CACHE_NODE_USER: ${{ secrets.GRADLE_ENTERPRISE_BUILD_CACHE_NODE_USER }}
@@ -96,13 +96,13 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
         with:
           token: ${{ secrets.GH_TOKEN }}
           ref: v${{ needs.publish.outputs.release_version }}
-      - uses: gradle/wrapper-validation-action@v2
+      - uses: gradle/wrapper-validation-action@b5418f5a58f5fd2eb486dd7efb368fe7be7eae45 # v2
       - name: Nexus Staging Close And Release
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
           GRADLE_ENTERPRISE_BUILD_CACHE_NODE_USER: ${{ secrets.GRADLE_ENTERPRISE_BUILD_CACHE_NODE_USER }}
@@ -135,7 +135,7 @@ jobs:
         env:
           RELEASE_VERSION: ${{ needs.publish.outputs.release_version }}
       - name: Invoke grails-doc release workflow
-        uses: benc-uk/workflow-dispatch@v1.2
+        uses: benc-uk/workflow-dispatch@25b02cc069be46d637e8fe2f1e8484008e9e9609 # v1.2
         with:
           workflow: Release
           repo: grails/grails-doc
@@ -157,7 +157,7 @@ jobs:
       - name: Invoke grails-static-website release workflow
         if: success()
         id: grails_static_website
-        uses: benc-uk/workflow-dispatch@v1.2
+        uses: benc-uk/workflow-dispatch@25b02cc069be46d637e8fe2f1e8484008e9e9609 # v1.2
         with:
           workflow: Release
           repo: grails/grails-static-website
